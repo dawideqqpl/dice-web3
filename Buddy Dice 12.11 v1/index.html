@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | Dice Web3</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+
+</head>
+<body>
+    <div id="unity-container" style="height: 100%; width: 100%">
+        <select id="chainSelect">
+            <option value="1" selected>Ethereum (ERC-20)</option>
+            <option value="56">Binance Smart Chain (BEP-20)</option>
+            <option value="89">Polygon (MATIC)</option>
+        </select>
+        <canvas id="unity-canvas" width=auto height=auto></canvas>
+        <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+            </div>
+        </div>
+        <div id="unity-warning"> </div>
+        <div id="unity-footer">
+            <div id="unity-webgl-logo"></div>
+            <div id="unity-fullscreen-button"></div>
+            <div id="unity-build-title">Dice Web3</div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bignumber.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="network.js"></script> <!-- Twój plik network.js -->
+    <script>
+
+
+        // Ręcznie ustaw wybraną opcję na Ethereum (Mainnet)
+        window.addEventListener('load', function () {
+            // Ustaw domyślnie wartość dropdown na "1" po pełnym załadowaniu strony
+            const savedChainId = localStorage.getItem('selectedChainId');
+            if (savedChainId) {
+                document.getElementById('chainSelect').value = savedChainId;
+                window.web3ChainId = savedChainId;
+            } else {
+                // Ustaw domyślnie wartość dropdown na "1"
+                document.getElementById('chainSelect').value = "1";
+                window.web3ChainId = 1;
+                localStorage.setItem('selectedChainId', 1);
+
+                window.location.reload();
+
+            }
+            console.log('Selected Chain START ID:', window.web3ChainId);
+
+        });
+
+
+
+        document.getElementById('chainSelect').addEventListener('change', function () {
+            const selectedChainId = this.value;
+            localStorage.setItem('selectedChainId', selectedChainId);
+            // Odśwież stronę
+            window.location.reload();
+        });
+    </script>
+    <script src="web3/index.js"></script>
+
+    <style>
+        /*      body, html {
+        /*          margin: 0;
+        /*          padding: 0;
+        /*          width: 100%;
+        /*          height: 100%;
+        /*          overflow: hidden;
+        /*          font-family: Arial, sans-serif;
+        /*      }
+        /*
+        /*      .game-container {
+        /*          position: absolute;
+        /*          top: 0;
+        /*          left: 0;
+        /*          width: 100%;
+        /*          height: 100%;
+        /*          background-color: #000; /* Przykład dla tła gry */
+        /*      }
+        /*
+        /*      .chain-selector {
+        /*          position: absolute;
+        /*          top: 10px; /* Ustala odległość od góry strony */
+        /*          left: 50%;
+        /*          transform: translateX(-50%);
+        /*          z-index: 1000; /* Ustawia wysoki z-index, aby dropdown był nad grą */
+        /*          background-color: rgba(255, 255, 255, 0.9);
+        /*          padding: 10px;
+        /*          border-radius: 5px;
+        /*          box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        /*      }
+        /*
+        /*      select {
+        /*          padding: 10px;
+        /*          border: 1px solid #ccc;
+        /*          border-radius: 5px;
+        /*          font-size: 16px;
+        /*          background-color: #fff;
+        /*      }
+        /*
+    </style>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #unity-container {
+            position: absolute; /* Absolutne pozycjonowanie dla kontenera Unity */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1; /* Z-index dla kontenera Unity */
+        }
+
+        .chain-selector {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000; /* Bardzo wysoki z-index, aby dropdown był nad Unity WebGL */
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            pointer-events: auto; /* Umożliwia interakcję z dropdownem */
+        }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #fff;
+            z-index: 1100; /* Zapewnia, że select jest nad wszystkim */
+        }
+    </style>
+
+    <script>
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/Buddy Dice 12.11 v1.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/Buddy Dice 12.11 v1.data.unityweb",
+        frameworkUrl: buildUrl + "/Buddy Dice 12.11 v1.framework.js.unityweb",
+        codeUrl: buildUrl + "/Buddy Dice 12.11 v1.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Dice Web3",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        container.className = "unity-mobile";
+        // Avoid draining fillrate performance on mobile devices,
+        // and default/override low DPI mode on mobile browsers.
+        config.devicePixelRatio = 1;
+        unityShowBanner('WebGL builds are not supported on mobile devices.');
+      } else {
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+      }
+      loadingBar.style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+            window.unityInstance = unityInstance;
+            sendBack();
+
+
+          loadingBar.style.display = "none";
+          fullscreenButton.onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+        }).catch((message) => {
+          alert(message);
+        });
+        };
+        function sendBack() {
+            window.unityInstance.SendMessage("LoginScript", "SetChain", window.web3ChainId);
+        }
+
+      document.body.appendChild(script);
+    </script>
+</body>
+</html>
