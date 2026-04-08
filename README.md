@@ -4,7 +4,7 @@ A provably fair dice gambling game built with Unity, integrated with blockchain 
 
 ## Demo
 
-<video src="https://github.com/dawideqqpl/dice-web3/releases/download/v1.0-demo/web3-dice.mp4" controls width="100%"></video>
+https://github.com/user-attachments/assets/be18d93c-dc50-4c38-b4d1-ab1be7be6c12
 
 ## Features
 
@@ -35,7 +35,7 @@ A provably fair dice gambling game built with Unity, integrated with blockchain 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/dice-web3.git
+git clone https://github.com/dawideqqpl/dice-web3.git
 cd dice-web3
 ```
 
