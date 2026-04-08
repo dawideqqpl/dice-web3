@@ -2,6 +2,10 @@
 
 A provably fair dice gambling game built with Unity, integrated with blockchain payments (Ethereum, BSC, Polygon) and PlayFab as the backend.
 
+## Demo
+
+https://github.com/dawideqqpl/dice-web3/releases/download/v1.0-demo/web3-dice.mp4
+
 ## Features
 
 - **Manual and auto-bet** modes with configurable strategies (stop on profit/loss, increase on win/loss)
